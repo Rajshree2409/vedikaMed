@@ -1,33 +1,68 @@
 import { useState } from "react";
 
 const theme = {
-  green: "#3CB371",
-  greenDark: "#2E8B57",
-  greenLight: "#e8f5e9",
-  navy: "#374151",
-  gray: "#f3f4f6",
-  grayBorder: "#e5e7eb",
-  grayText: "#9ca3af",
+  green: "#0f9d8a",
+  greenDark: "#0b7668",
+  greenLight: "#e7f7f4",
+  navy: "#0f172a",
+  gray: "#f8fafc",
+  grayBorder: "#e2e8f0",
+  grayText: "#64748b",
   white: "#ffffff",
   red: "#ef4444",
-  blue: "#3b82f6",
+  blue: "#2563eb",
 };
 
 const style = {
   app: {
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    maxWidth: 390,
-    margin: "0 auto",
-    background: "#f0f2f5",
+    width: "100%",
     minHeight: "100vh",
+    background: "radial-gradient(circle at top left, rgba(15,157,138,0.08), transparent 22%), linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%)",
+    display: "flex",
+    flexDirection: "column",
     position: "relative",
-    overflow: "hidden",
-    boxShadow: "0 0 40px rgba(0,0,0,0.15)",
+    overflowX: "hidden",
   },
   screen: {
-    background: "#f5f6fa",
+    background: "transparent",
     minHeight: "100vh",
-    paddingBottom: 80,
+    paddingBottom: 110,
+  },
+};
+
+const layout = {
+  content: {
+    width: "min(1440px, calc(100% - 40px))",
+    margin: "0 auto",
+  },
+  sectionGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 16,
+    marginBottom: 24,
+  },
+  heroGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+    gap: 24,
+    marginBottom: 24,
+  },
+  shortcutGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 16,
+  },
+  featureGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+    gap: 24,
+  },
+  productGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: 16,
+    padding: "12px 0 120px",
   },
 };
 
@@ -198,95 +233,221 @@ const BottomNav = ({ active, setActive }) => {
   ];
   return (
     <div style={{
-      position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
-      width: 390, background: "#374151", display: "flex", zIndex: 100,
+      position: "fixed",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: "rgba(55, 65, 81, 0.94)",
+      backdropFilter: "blur(14px)",
+      borderTop: "1px solid rgba(255,255,255,0.08)",
+      zIndex: 100,
     }}>
-      {tabs.map(t => (
-        <button key={t.key} onClick={() => setActive(t.key)} style={{
-          flex: 1, padding: "12px 0 8px", background: "none", border: "none",
-          cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-        }}>
-          <Icon name={t.key} size={22} color={active === t.key ? theme.green : "#9ca3af"} />
-          <span style={{ fontSize: 10, color: active === t.key ? theme.green : "#9ca3af", fontWeight: active === t.key ? 700 : 400 }}>
-            {t.label}
-          </span>
-        </button>
-      ))}
+      <div style={{
+        ...layout.content,
+        display: "grid",
+        gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))`,
+        padding: "10px 0 12px",
+      }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setActive(t.key)} style={{
+            padding: "10px 0 8px", background: "none", border: "none",
+            cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+          }}>
+            <Icon name={t.key} size={24} color={active === t.key ? "#ffffff" : "#cbd5e1"} />
+            <span style={{ fontSize: 11, color: active === t.key ? "#ffffff" : "#cbd5e1", fontWeight: active === t.key ? 700 : 500 }}>
+              {t.label}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
 
 // Medicine image card (matches screenshot style)
-const CategoryCard = ({ imgSrc, label, bg = "#fff" }) => (
-  <div style={{
-    background: bg,
-    borderRadius: 14,
-    padding: "10px 8px 8px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 6,
-    minWidth: 100,
-    maxWidth: 100,
-    flexShrink: 0,
-    boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
-    cursor: "pointer",
-    border: "1px solid #f0f0f0",
-  }}>
-    <div style={{
-      width: 80, height: 72,
-      borderRadius: 10,
-      overflow: "hidden",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#f8f9fa",
+const CategoryCard = ({ imgSrc, label, fallback, onClick }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+  return (
+    <div onClick={onClick} style={{
+      background: "#fff",
+      borderRadius: 18,
+      padding: "14px 14px 12px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 10,
+      width: "100%",
+      minWidth: 0,
+      boxShadow: "0 10px 24px rgba(15,23,42,0.08)",
+      cursor: "pointer",
+      border: "1px solid #eef2f7",
     }}>
-      <img src={imgSrc} alt={label} style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={e => { e.target.style.display='none'; }} />
+      <div style={{
+        width: "100%", height: "clamp(100px, 12vw, 148px)",
+        borderRadius: 14,
+        overflow: "hidden",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "#f8fafc",
+        fontSize: 36,
+      }}>
+        {!imgFailed
+          ? <img
+              src={imgSrc}
+              alt={label}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              onError={() => setImgFailed(true)}
+            />
+          : fallback}
+      </div>
+      <span style={{ fontSize: 14, color: "#222", textAlign: "center", fontWeight: 600, lineHeight: 1.3 }}>{label}</span>
     </div>
-    <span style={{ fontSize: 11, color: "#222", textAlign: "center", fontWeight: 500, lineHeight: 1.2 }}>{label}</span>
-  </div>
-);
+  );
+};
 
 const SectionTitle = ({ children }) => (
-  <div style={{ fontWeight: 800, fontSize: 15, color: "#111", marginBottom: 10, letterSpacing: 0 }}>{children}</div>
+  <div style={{ fontWeight: 800, fontSize: 22, color: "#111", marginBottom: 14, letterSpacing: -0.3 }}>{children}</div>
 );
 
-// For You shortcut button
-const ForYouItem = ({ icon, label, bg }) => (
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7, cursor: "pointer", flex: 1 }}>
+// For You shortcut button — uses illustrated SVG icons like the screenshot
+const ForYouItem = ({ svgIcon, label, bg, fallbackEmoji }) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", padding: "10px 8px" }}>
     <div style={{
-      width: 58, height: 58, borderRadius: "50%",
+      width: 74, height: 74, borderRadius: "50%",
       background: bg || "#e8f5e9",
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 28,
-      boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
-    }}>{icon}</div>
-    <span style={{ fontSize: 11, color: "#222", textAlign: "center", fontWeight: 500, maxWidth: 72, lineHeight: 1.3 }}>{label}</span>
+      boxShadow: "0 10px 24px rgba(15,23,42,0.12)",
+      overflow: "hidden",
+    }}>
+      {svgIcon || <span style={{ fontSize: 28 }}>{fallbackEmoji}</span>}
+    </div>
+    <span style={{ fontSize: 14, color: "#222", textAlign: "center", fontWeight: 600, maxWidth: 120, lineHeight: 1.35 }}>{label}</span>
   </div>
+);
+
+const SurfaceCard = ({ children, style: cardStyle = {} }) => (
+  <div
+    style={{
+      background: theme.white,
+      borderRadius: 24,
+      border: `1px solid ${theme.grayBorder}`,
+      boxShadow: "0 20px 45px rgba(15, 23, 42, 0.08)",
+      ...cardStyle,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const HeroStat = ({ value, label }) => (
+  <div
+    style={{
+      background: "rgba(255,255,255,0.72)",
+      border: "1px solid rgba(255,255,255,0.55)",
+      borderRadius: 18,
+      padding: "14px 16px",
+      minWidth: 130,
+    }}
+  >
+    <div style={{ fontSize: 24, fontWeight: 800, color: theme.navy }}>{value}</div>
+    <div style={{ fontSize: 12, color: theme.grayText, marginTop: 4 }}>{label}</div>
+  </div>
+);
+
+const CollectionPanel = ({ eyebrow, title, description, children }) => (
+  <SurfaceCard style={{ padding: 24 }}>
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: theme.green }}>
+        {eyebrow}
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: theme.navy, marginTop: 6 }}>{title}</div>
+      <div style={{ fontSize: 14, color: theme.grayText, marginTop: 6, maxWidth: 560 }}>{description}</div>
+    </div>
+    <div style={layout.sectionGrid}>{children}</div>
+  </SurfaceCard>
+);
+
+const ServiceCard = ({ icon, title, description, actionLabel }) => (
+  <SurfaceCard style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+    <div
+      style={{
+        width: 56,
+        height: 56,
+        borderRadius: 18,
+        background: theme.greenLight,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {icon}
+    </div>
+    <div style={{ fontSize: 18, fontWeight: 800, color: theme.navy }}>{title}</div>
+    <div style={{ fontSize: 14, lineHeight: 1.6, color: theme.grayText, flex: 1 }}>{description}</div>
+    <div style={{ fontSize: 13, fontWeight: 700, color: theme.green }}>{actionLabel}</div>
+  </SurfaceCard>
+);
+
+const EmptyFeatureCard = ({ icon, title, description, actionLabel }) => (
+  <SurfaceCard style={{ padding: 24, minHeight: 220, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+    <div>
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 18,
+          background: theme.gray,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 16,
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: theme.navy, marginBottom: 10 }}>{title}</div>
+      <div style={{ fontSize: 14, color: theme.grayText, lineHeight: 1.6 }}>{description}</div>
+    </div>
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 999,
+        padding: "10px 16px",
+        background: theme.greenLight,
+        color: theme.greenDark,
+        fontSize: 13,
+        fontWeight: 700,
+        width: "fit-content",
+      }}
+    >
+      {actionLabel}
+    </div>
+  </SurfaceCard>
 );
 
 // Home Screen
-const HomeScreen = ({ setSidebarOpen }) => (
+const HomeScreen = ({ setSidebarOpen, setCurrentPage }) => (
   <div style={{ ...style.screen, overflowY: "auto" }}>
     {/* Header */}
     <div style={{
       background: "#fff",
-      padding: "14px 16px 12px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
       boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
       position: "sticky", top: 0, zIndex: 10,
     }}>
+      <div style={{ ...layout.content, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "18px 0 16px" }}>
       <button
         onClick={() => setSidebarOpen(true)}
         style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }}
       >
-        <Icon name="menu" size={26} color="#222" />
+        <Icon name="menu" size={28} color="#222" />
       </button>
-      <span style={{ color: theme.green, fontWeight: 800, fontSize: 17, letterSpacing: -0.3 }}>
+      <span style={{ color: theme.green, fontWeight: 800, fontSize: 26, letterSpacing: -0.5, flex: 1 }}>
         Software House 👋
       </span>
       <div style={{ position: "relative", cursor: "pointer" }}>
         {/* Cart icon SVG */}
-        <svg width={28} height={28} fill="none" viewBox="0 0 24 24">
+        <svg width={34} height={34} fill="none" viewBox="0 0 24 24">
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="#222" strokeWidth={1.8} strokeLinejoin="round"/>
           <path d="M3 6h18" stroke="#222" strokeWidth={1.8} strokeLinecap="round"/>
           <path d="M16 10a4 4 0 01-8 0" stroke="#222" strokeWidth={1.8} strokeLinecap="round"/>
@@ -294,118 +455,631 @@ const HomeScreen = ({ setSidebarOpen }) => (
         <span style={{
           position: "absolute", top: -5, right: -5,
           background: theme.red, color: "#fff",
-          borderRadius: "50%", fontSize: 9, width: 16, height: 16,
+          borderRadius: "50%", fontSize: 10, width: 18, height: 18,
           display: "flex", alignItems: "center", justifyContent: "center",
           fontWeight: 700, border: "1.5px solid #fff",
         }}>0</span>
       </div>
+      </div>
     </div>
 
-    <div style={{ padding: "12px 12px 0" }}>
+    <div style={{ ...layout.content, padding: "24px 0 0" }}>
       {/* Search bar */}
       <div style={{
-        background: "#fff", borderRadius: 10, padding: "11px 14px",
+        background: "#fff", borderRadius: 16, padding: "18px 22px",
         display: "flex", alignItems: "center", gap: 10,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-        marginBottom: 16, border: "1px solid #ececec",
+        boxShadow: "0 10px 24px rgba(15,23,42,0.08)",
+        marginBottom: 24, border: "1px solid #ececec",
       }}>
-        <Icon name="search" size={18} color="#aaa" />
-        <span style={{ color: "#aaa", fontSize: 14 }}>Search from 5000+ products</span>
+        <Icon name="search" size={20} color="#94a3b8" />
+        <span style={{ color: "#94a3b8", fontSize: 18 }}>Search from 5000+ products</span>
       </div>
 
       {/* ── Medicine ── */}
       <SectionTitle>Medicine</SectionTitle>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 16, scrollbarWidth: "none" }}>
+      <div style={layout.sectionGrid}>
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Pill_closeup.jpg/320px-Pill_closeup.jpg"
+          onClick={() => setCurrentPage("products:Capsules")}
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/2019-01-11_Oral_contraceptive_pills_in_blister_packs.jpg/320px-2019-01-11_Oral_contraceptive_pills_in_blister_packs.jpg"
           label="Capsules"
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              <rect x="15" y="28" width="50" height="18" rx="9" fill="#f5c842"/>
+              <rect x="15" y="28" width="25" height="18" rx="9" fill="#e6a800"/>
+              <text x="28" y="41" fontSize="9" fill="#fff" fontWeight="bold">L U</text>
+              <rect x="15" y="50" width="50" height="18" rx="9" fill="#f5c842"/>
+              <rect x="15" y="50" width="25" height="18" rx="9" fill="#e6a800"/>
+              <text x="24" y="63" fontSize="9" fill="#fff" fontWeight="bold">D 0 3</text>
+            </svg>
+          }
         />
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Capsules_and_tablets.jpg/320px-Capsules_and_tablets.jpg"
+          onClick={() => setCurrentPage("products:capsule")}
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Herbal_supplements.jpg/320px-Herbal_supplements.jpg"
           label="capsule"
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              {[{x:30,y:10,r:0},{x:50,y:18,r:30},{x:20,y:30,r:-20},{x:45,y:35,r:45},{x:32,y:50,r:10},{x:55,y:48,r:-30}].map((c,i)=>(
+                <g key={i} transform={`translate(${c.x},${c.y}) rotate(${c.r})`}>
+                  <rect x="-10" y="-5" width="20" height="10" rx="5" fill="#7ac942"/>
+                  <rect x="-10" y="-5" width="10" height="10" rx="5" fill="#5ba832"/>
+                </g>
+              ))}
+            </svg>
+          }
         />
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/红绿胶囊.jpg/320px-红绿胶囊.jpg"
+          onClick={() => setCurrentPage("products:Medicine")}
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/%E7%BA%A2%E7%BB%BF%E8%83%B6%E5%9B%8A.jpg/320px-%E7%BA%A2%E7%BB%BF%E8%83%B6%E5%9B%8A.jpg"
           label="Medicine"
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              <g transform="translate(40,36) rotate(-30)">
+                <rect x="-22" y="-10" width="44" height="20" rx="10" fill="#e05c5c"/>
+                <rect x="-22" y="-10" width="22" height="20" rx="10" fill="#f5e0c0"/>
+              </g>
+            </svg>
+          }
         />
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Syringe_needle_close-up.jpg/320px-Syringe_needle_close-up.jpg"
+          onClick={() => setCurrentPage("products:Injection")}
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Syringe_2.jpg/320px-Syringe_2.jpg"
           label="Injection"
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              <rect x="34" y="8" width="12" height="42" rx="4" fill="#c084fc"/>
+              <rect x="36" y="10" width="8" height="38" rx="3" fill="#e9d5ff"/>
+              <rect x="30" y="48" width="20" height="8" rx="2" fill="#7c3aed"/>
+              <rect x="38" y="56" width="4" height="10" rx="1" fill="#6d28d9"/>
+            </svg>
+          }
         />
       </div>
 
       {/* ── OTC ── */}
       <SectionTitle>OTC</SectionTitle>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 16, scrollbarWidth: "none" }}>
+      <div style={layout.sectionGrid}>
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Ayurveda_herbs_and_spices.jpg/320px-Ayurveda_herbs_and_spices.jpg"
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Spices_of_Kerala.jpg/320px-Spices_of_Kerala.jpg"
           label="Ayurveda Prod..."
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              <ellipse cx="40" cy="52" rx="22" ry="14" fill="#c8a96e"/>
+              <ellipse cx="40" cy="48" rx="18" ry="10" fill="#8B6914"/>
+              <path d="M30 20 Q40 5 50 20 Q45 35 40 42 Q35 35 30 20z" fill="#4ade80"/>
+              <path d="M22 28 Q32 15 42 28" fill="#22c55e" opacity="0.7"/>
+              <path d="M38 28 Q48 15 58 28" fill="#16a34a" opacity="0.7"/>
+            </svg>
+          }
         />
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Medicine_assorted.jpg/320px-Medicine_assorted.jpg"
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Pills.jpg/320px-Pills.jpg"
           label="OTC Medicine 2"
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              <ellipse cx="40" cy="44" rx="20" ry="14" fill="#d4d4d4" opacity="0.4"/>
+              {[{x:28,y:28,c:"#e05c5c"},{x:42,y:22,c:"#f5c842"},{x:55,y:30,c:"#4ade80"},{x:34,y:42,c:"#60a5fa"},{x:50,y:44,c:"#f97316"},{x:24,y:40,c:"#c084fc"}].map((p,i)=>(
+                <circle key={i} cx={p.x} cy={p.y} r="7" fill={p.c}/>
+              ))}
+            </svg>
+          }
         />
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Medical_bandage.jpg/320px-Medical_bandage.jpg"
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Bandage_roll.jpg/320px-Bandage_roll.jpg"
           label="BANDAGE"
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              <ellipse cx="40" cy="46" rx="24" ry="12" fill="#e5e7eb"/>
+              <ellipse cx="40" cy="40" rx="22" ry="10" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+              <ellipse cx="40" cy="34" rx="20" ry="8" fill="#fff" stroke="#d1d5db" strokeWidth="1"/>
+              <ellipse cx="40" cy="28" rx="16" ry="7" fill="#f3f4f6" stroke="#e5e7eb" strokeWidth="1"/>
+              <rect x="30" y="16" width="20" height="12" rx="3" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+            </svg>
+          }
         />
       </div>
 
       {/* ── Baby Care ── */}
       <SectionTitle>Baby Care</SectionTitle>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 16, scrollbarWidth: "none" }}>
+      <div style={layout.sectionGrid}>
         <CategoryCard
           imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Baby_formula_-_Similac_-_cropped.jpg/320px-Baby_formula_-_Similac_-_cropped.jpg"
           label="Baby Formula"
+          fallback={
+            <svg viewBox="0 0 80 72" width="80" height="72">
+              <rect x="22" y="16" width="36" height="48" rx="6" fill="#1d4ed8"/>
+              <rect x="26" y="20" width="28" height="36" rx="4" fill="#3b82f6"/>
+              <rect x="28" y="56" width="24" height="8" rx="3" fill="#1e40af"/>
+              <ellipse cx="40" cy="16" rx="12" ry="4" fill="#93c5fd"/>
+              <text x="34" y="40" fontSize="8" fill="#fff" fontWeight="bold">S</text>
+            </svg>
+          }
         />
         <CategoryCard
-          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Baby_powder.jpg/320px-Baby_powder.jpg"
-          label="Baby Powder"
+          imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Baby_Products.jpg/320px-Baby_Products.jpg"
+          label="Baby Care"
+          fallback={<span style={{fontSize:34}}>🧴</span>}
         />
       </div>
     </div>
 
     {/* Divider line like screenshot */}
-    <div style={{ height: 8, background: "#ebebeb", margin: "2px 0 0" }} />
+    <div style={{ height: 10, background: "#e2e8f0", margin: "10px 0 0" }} />
 
     {/* ── For You ── */}
-    <div style={{ padding: "14px 12px 0" }}>
+    <div style={{ ...layout.content, padding: "24px 0 0" }}>
       <SectionTitle>For You</SectionTitle>
       <div style={{
-        background: "#fff", borderRadius: 14, padding: "16px 10px",
-        boxShadow: "0 1px 6px rgba(0,0,0,0.07)", marginBottom: 16,
-        display: "flex", justifyContent: "space-around",
+        background: "#fff", borderRadius: 20, padding: "24px",
+        boxShadow: "0 10px 24px rgba(15,23,42,0.08)", marginBottom: 24,
       }}>
-        <ForYouItem icon="🤝" label="B2B Shopping" bg="#dbeafe" />
-        <ForYouItem icon="🎧" label="SalesMan App" bg="#e0f2fe" />
-        <ForYouItem icon="👨‍⚕️" label="Doctor Appointment" bg="#f0fdf4" />
+        {/* B2B Shopping — blue circle with two-people icon */}
+        <ForYouItem
+          label="B2B Shopping"
+          bg="#1e3a8a"
+          svgIcon={
+            <svg width={38} height={38} viewBox="0 0 64 64" fill="none">
+              <circle cx="22" cy="22" r="11" fill="#60a5fa"/>
+              <circle cx="42" cy="22" r="11" fill="#34d399"/>
+              <path d="M6 56c0-9 7-16 16-16h20c9 0 16 7 16 16" fill="#93c5fd" opacity="0.7"/>
+              <path d="M26 40c2-1 4-1.5 6-1.5s4 .5 6 1.5" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M29 32l3 6 3-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          }
+        />
+        {/* SalesMan App — blue headset person */}
+        <ForYouItem
+          label="SalesMan App"
+          bg="#0ea5e9"
+          svgIcon={
+            <svg width={38} height={38} viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="20" r="12" fill="#bfdbfe"/>
+              <circle cx="32" cy="20" r="6" fill="#93c5fd"/>
+              <rect x="20" y="32" width="24" height="18" rx="8" fill="#3b82f6"/>
+              <path d="M14 26a6 6 0 016-6v12a6 6 0 01-6-6z" fill="#1d4ed8"/>
+              <path d="M50 26a6 6 0 00-6-6v12a6 6 0 006-6z" fill="#1d4ed8"/>
+              <rect x="29" y="44" width="6" height="6" rx="3" fill="#fff" opacity="0.6"/>
+            </svg>
+          }
+        />
+        {/* Doctor Appointment — white bg with doctor SVG */}
+        <ForYouItem
+          label="Doctor Appointment"
+          bg="#f0fdf4"
+          svgIcon={
+            <svg width={38} height={38} viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="16" r="12" fill="#fef3c7"/>
+              <circle cx="32" cy="16" r="7" fill="#fde68a"/>
+              <rect x="16" y="28" width="32" height="28" rx="8" fill="#fff"/>
+              <rect x="20" y="28" width="24" height="28" rx="6" fill="#dcfce7"/>
+              <rect x="29" y="34" width="6" height="14" rx="3" fill="#16a34a"/>
+              <rect x="23" y="38" width="18" height="6" rx="3" fill="#16a34a"/>
+              <path d="M24 12 Q32 4 40 12" stroke="#d97706" strokeWidth="2" fill="none"/>
+            </svg>
+          }
+        />
       </div>
 
       {/* ── Lab Test ── */}
-      <SectionTitle>Lab Test</SectionTitle>
-      <div style={{
-        background: "#fff", borderRadius: 14, height: 110,
-        marginBottom: 16, boxShadow: "0 1px 6px rgba(0,0,0,0.07)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#ccc", fontSize: 13,
-      }}>
-        {/* empty like screenshot */}
-      </div>
+      <div style={layout.featureGrid}>
+        <div>
+          <SectionTitle>Lab Test</SectionTitle>
+          <div style={{
+            background: "#fff", borderRadius: 20, height: 180,
+            marginBottom: 16, boxShadow: "0 10px 24px rgba(15,23,42,0.08)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#ccc", fontSize: 14,
+          }}>
+            {/* empty like screenshot */}
+          </div>
+        </div>
 
-      <SectionTitle>Doctor Appoinment</SectionTitle>
-      <div style={{
-        background: "#fff", borderRadius: 14, height: 110,
-        marginBottom: 16, boxShadow: "0 1px 6px rgba(0,0,0,0.07)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#ccc", fontSize: 13,
-      }}>
-        {/* empty like screenshot */}
+        <div>
+          <SectionTitle>Doctor Appoinment</SectionTitle>
+          <div style={{
+            background: "#fff", borderRadius: 20, height: 180,
+            marginBottom: 16, boxShadow: "0 10px 24px rgba(15,23,42,0.08)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#ccc", fontSize: 14,
+          }}>
+            {/* empty like screenshot */}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 );
 
 // Sidebar / Drawer — slides in from the LEFT edge of the phone
+const ProfessionalHomeScreen = ({ setSidebarOpen, setCurrentPage }) => (
+  <div style={{ ...style.screen, overflowY: "auto" }}>
+    <div
+      style={{
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(10px)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+      }}
+    >
+      <div
+        style={{
+          ...layout.content,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16,
+          padding: "18px 0 16px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }}
+          >
+            <Icon name="menu" size={28} color={theme.navy} />
+          </button>
+          <div>
+            <div style={{ color: theme.green, fontWeight: 800, fontSize: 24, letterSpacing: -0.5 }}>
+              Software House
+            </div>
+            <div style={{ fontSize: 12, color: theme.grayText, marginTop: 2 }}>
+              B2B pharma ordering and fulfillment workspace
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: theme.grayText, fontSize: 13 }}>
+            <Icon name="shield" size={18} color={theme.green} />
+            Secure ordering
+          </div>
+          <div style={{ position: "relative", cursor: "pointer" }}>
+            <Icon name="cart" size={30} color={theme.navy} />
+            <span
+              style={{
+                position: "absolute",
+                top: -6,
+                right: -6,
+                background: theme.red,
+                color: "#fff",
+                borderRadius: "50%",
+                fontSize: 10,
+                width: 18,
+                height: 18,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                border: "1.5px solid #fff",
+              }}
+            >
+              0
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style={{ ...layout.content, padding: "28px 0 48px" }}>
+      <div style={layout.heroGrid}>
+        <SurfaceCard
+          style={{
+            padding: 32,
+            background:
+              "linear-gradient(135deg, rgba(15,157,138,0.16) 0%, rgba(37,99,235,0.10) 100%)",
+          }}
+        >
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.72)",
+              padding: "8px 14px",
+              color: theme.greenDark,
+              fontSize: 12,
+              fontWeight: 700,
+              marginBottom: 18,
+            }}
+          >
+            <Icon name="orders" size={16} color={theme.greenDark} />
+            Vedika Commerce Dashboard
+          </div>
+          <div style={{ fontSize: 38, lineHeight: 1.1, fontWeight: 800, color: theme.navy, maxWidth: 680 }}>
+            Order medicines, OTC products, and partner supplies from one professional workspace.
+          </div>
+          <div style={{ fontSize: 16, lineHeight: 1.7, color: "#334155", marginTop: 14, maxWidth: 700 }}>
+            Manage high-frequency pharmacy orders, retailer registration, and support channels in a cleaner desktop-first experience built for everyday operations.
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 22 }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 999,
+                padding: "12px 18px",
+                background: theme.green,
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              Browse product catalog
+            </div>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 999,
+                padding: "12px 18px",
+                background: "#ffffff",
+                color: theme.navy,
+                fontSize: 14,
+                fontWeight: 700,
+                border: `1px solid ${theme.grayBorder}`,
+              }}
+            >
+              Retailer onboarding
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 24 }}>
+            <HeroStat value="5000+" label="Available products" />
+            <HeroStat value="24/7" label="Support readiness" />
+            <HeroStat value="100%" label="Centralized order flow" />
+          </div>
+        </SurfaceCard>
+
+        <SurfaceCard style={{ padding: 28 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: theme.green }}>
+            Operations Snapshot
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: theme.navy, marginTop: 8 }}>
+            Keep sales, support, and supply in one view.
+          </div>
+          <div style={{ fontSize: 14, color: theme.grayText, lineHeight: 1.7, marginTop: 10 }}>
+            Use the dashboard to jump between ordering, wallet, retailer onboarding, and customer support without switching tools.
+          </div>
+
+          <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
+            {[
+              { icon: "wallet", title: "Wallet Status", value: "Rs 0.00 available" },
+              { icon: "user", title: "Retailer Access", value: "Registration and account actions ready" },
+              { icon: "phone", title: "Support Line", value: "Fast contact options for order help" },
+            ].map((item) => (
+              <div
+                key={item.title}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "14px 16px",
+                  borderRadius: 18,
+                  background: theme.gray,
+                }}
+              >
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 14,
+                    background: theme.white,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: `1px solid ${theme.grayBorder}`,
+                  }}
+                >
+                  <Icon name={item.icon} size={20} color={theme.greenDark} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: theme.navy }}>{item.title}</div>
+                  <div style={{ fontSize: 13, color: theme.grayText, marginTop: 4 }}>{item.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SurfaceCard>
+      </div>
+
+      <SurfaceCard style={{ padding: "18px 22px", marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Icon name="search" size={20} color={theme.grayText} />
+          <div>
+            <div style={{ color: theme.navy, fontSize: 16, fontWeight: 700 }}>
+              Search medicines, OTC, and business services
+            </div>
+            <div style={{ color: theme.grayText, fontSize: 13, marginTop: 3 }}>
+              Search across 5000+ products, doctor services, lab support, and partner tools
+            </div>
+          </div>
+        </div>
+      </SurfaceCard>
+
+      <div style={{ display: "grid", gap: 24 }}>
+        <CollectionPanel
+          eyebrow="Catalog"
+          title="Medicine"
+          description="Prescription-ready categories for fast ordering across daily operational demand."
+        >
+          <CategoryCard
+            onClick={() => setCurrentPage("products:Capsules")}
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/2019-01-11_Oral_contraceptive_pills_in_blister_packs.jpg/320px-2019-01-11_Oral_contraceptive_pills_in_blister_packs.jpg"
+            label="Capsules"
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                <rect x="15" y="28" width="50" height="18" rx="9" fill="#f5c842"/>
+                <rect x="15" y="28" width="25" height="18" rx="9" fill="#e6a800"/>
+                <text x="28" y="41" fontSize="9" fill="#fff" fontWeight="bold">L U</text>
+                <rect x="15" y="50" width="50" height="18" rx="9" fill="#f5c842"/>
+                <rect x="15" y="50" width="25" height="18" rx="9" fill="#e6a800"/>
+                <text x="24" y="63" fontSize="9" fill="#fff" fontWeight="bold">D 0 3</text>
+              </svg>
+            }
+          />
+          <CategoryCard
+            onClick={() => setCurrentPage("products:capsule")}
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Herbal_supplements.jpg/320px-Herbal_supplements.jpg"
+            label="capsule"
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                {[{x:30,y:10,r:0},{x:50,y:18,r:30},{x:20,y:30,r:-20},{x:45,y:35,r:45},{x:32,y:50,r:10},{x:55,y:48,r:-30}].map((c,i)=>(
+                  <g key={i} transform={`translate(${c.x},${c.y}) rotate(${c.r})`}>
+                    <rect x="-10" y="-5" width="20" height="10" rx="5" fill="#7ac942"/>
+                    <rect x="-10" y="-5" width="10" height="10" rx="5" fill="#5ba832"/>
+                  </g>
+                ))}
+              </svg>
+            }
+          />
+          <CategoryCard
+            onClick={() => setCurrentPage("products:Medicine")}
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/%E7%BA%A2%E7%BB%BF%E8%83%B6%E5%9B%8A.jpg/320px-%E7%BA%A2%E7%BB%BF%E8%83%B6%E5%9B%8A.jpg"
+            label="Medicine"
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                <g transform="translate(40,36) rotate(-30)">
+                  <rect x="-22" y="-10" width="44" height="20" rx="10" fill="#e05c5c"/>
+                  <rect x="-22" y="-10" width="22" height="20" rx="10" fill="#f5e0c0"/>
+                </g>
+              </svg>
+            }
+          />
+          <CategoryCard
+            onClick={() => setCurrentPage("products:Injection")}
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Syringe_2.jpg/320px-Syringe_2.jpg"
+            label="Injection"
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                <rect x="34" y="8" width="12" height="42" rx="4" fill="#c084fc"/>
+                <rect x="36" y="10" width="8" height="38" rx="3" fill="#e9d5ff"/>
+                <rect x="30" y="48" width="20" height="8" rx="2" fill="#7c3aed"/>
+                <rect x="38" y="56" width="4" height="10" rx="1" fill="#6d28d9"/>
+              </svg>
+            }
+          />
+        </CollectionPanel>
+
+        <CollectionPanel
+          eyebrow="Wellness"
+          title="OTC"
+          description="Front-counter essentials including ayurveda, bandages, and non-prescription care."
+        >
+          <CategoryCard
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Spices_of_Kerala.jpg/320px-Spices_of_Kerala.jpg"
+            label="Ayurveda Prod..."
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                <ellipse cx="40" cy="52" rx="22" ry="14" fill="#c8a96e"/>
+                <ellipse cx="40" cy="48" rx="18" ry="10" fill="#8B6914"/>
+                <path d="M30 20 Q40 5 50 20 Q45 35 40 42 Q35 35 30 20z" fill="#4ade80"/>
+                <path d="M22 28 Q32 15 42 28" fill="#22c55e" opacity="0.7"/>
+                <path d="M38 28 Q48 15 58 28" fill="#16a34a" opacity="0.7"/>
+              </svg>
+            }
+          />
+          <CategoryCard
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Pills.jpg/320px-Pills.jpg"
+            label="OTC Medicine 2"
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                <ellipse cx="40" cy="44" rx="20" ry="14" fill="#d4d4d4" opacity="0.4"/>
+                {[{x:28,y:28,c:"#e05c5c"},{x:42,y:22,c:"#f5c842"},{x:55,y:30,c:"#4ade80"},{x:34,y:42,c:"#60a5fa"},{x:50,y:44,c:"#f97316"},{x:24,y:40,c:"#c084fc"}].map((p,i)=>(
+                  <circle key={i} cx={p.x} cy={p.y} r="7" fill={p.c}/>
+                ))}
+              </svg>
+            }
+          />
+          <CategoryCard
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Bandage_roll.jpg/320px-Bandage_roll.jpg"
+            label="BANDAGE"
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                <ellipse cx="40" cy="46" rx="24" ry="12" fill="#e5e7eb"/>
+                <ellipse cx="40" cy="40" rx="22" ry="10" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+                <ellipse cx="40" cy="34" rx="20" ry="8" fill="#fff" stroke="#d1d5db" strokeWidth="1"/>
+                <ellipse cx="40" cy="28" rx="16" ry="7" fill="#f3f4f6" stroke="#e5e7eb" strokeWidth="1"/>
+                <rect x="30" y="16" width="20" height="12" rx="3" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+              </svg>
+            }
+          />
+        </CollectionPanel>
+
+        <CollectionPanel
+          eyebrow="Family Care"
+          title="Baby Care"
+          description="Professional access to nutrition and recurring family-care products."
+        >
+          <CategoryCard
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Baby_formula_-_Similac_-_cropped.jpg/320px-Baby_formula_-_Similac_-_cropped.jpg"
+            label="Baby Formula"
+            fallback={
+              <svg viewBox="0 0 80 72" width="80" height="72">
+                <rect x="22" y="16" width="36" height="48" rx="6" fill="#1d4ed8"/>
+                <rect x="26" y="20" width="28" height="36" rx="4" fill="#3b82f6"/>
+                <rect x="28" y="56" width="24" height="8" rx="3" fill="#1e40af"/>
+                <ellipse cx="40" cy="16" rx="12" ry="4" fill="#93c5fd"/>
+                <text x="34" y="40" fontSize="8" fill="#fff" fontWeight="bold">S</text>
+              </svg>
+            }
+          />
+          <CategoryCard
+            imgSrc="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Baby_Products.jpg/320px-Baby_Products.jpg"
+            label="Baby Care"
+            fallback={<span style={{ fontSize: 34 }}>BC</span>}
+          />
+        </CollectionPanel>
+
+        <div>
+          <SectionTitle>Business Services</SectionTitle>
+          <div style={layout.shortcutGrid}>
+            <ServiceCard
+              icon={<Icon name="cart" size={26} color={theme.greenDark} />}
+              title="B2B Shopping"
+              description="Create repeatable purchasing flows for retailer orders, bulk medicine requests, and regular partner replenishment."
+              actionLabel="Open ordering workspace"
+            />
+            <ServiceCard
+              icon={<Icon name="orders" size={26} color={theme.greenDark} />}
+              title="Sales Operations"
+              description="Keep sales teams aligned with product visibility, retailer onboarding, and consistent follow-up on active requirements."
+              actionLabel="Manage sales activity"
+            />
+            <ServiceCard
+              icon={<Icon name="chat" size={26} color={theme.greenDark} />}
+              title="Doctor Appointment"
+              description="Prepare a cleaner service area for consultations, appointment requests, and doctor-facing coordination inside one system."
+              actionLabel="Configure appointment flow"
+            />
+          </div>
+        </div>
+
+        <div>
+          <SectionTitle>Upcoming Services</SectionTitle>
+          <div style={layout.featureGrid}>
+            <EmptyFeatureCard
+              icon={<Icon name="search" size={24} color={theme.greenDark} />}
+              title="Lab Test"
+              description="Set up at-home collection requests, test package visibility, and customer coordination from a single business-facing panel."
+              actionLabel="Prepare lab service"
+            />
+            <EmptyFeatureCard
+              icon={<Icon name="user" size={24} color={theme.greenDark} />}
+              title="Doctor Appointment"
+              description="Offer a more structured appointment experience with doctor listing, booking status, and customer communication workflows."
+              actionLabel="Plan appointment module"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const Sidebar = ({ open, onClose, setCurrentPage }) => {
   const menuItems = [
     { icon: "user",     label: "My Accounts",          page: "profile" },
@@ -427,7 +1101,7 @@ const Sidebar = ({ open, onClose, setCurrentPage }) => {
       <div
         onClick={onClose}
         style={{
-          position: "absolute", inset: 0, zIndex: 200,
+          position: "fixed", inset: 0, zIndex: 200,
           background: "rgba(0,0,0,0.45)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
@@ -436,8 +1110,8 @@ const Sidebar = ({ open, onClose, setCurrentPage }) => {
       />
       {/* Drawer panel */}
       <div style={{
-        position: "absolute", top: 0, left: 0,
-        width: 270, height: "100%",
+        position: "fixed", top: 0, left: 0,
+        width: "min(320px, 86vw)", height: "100vh",
         background: "#fff",
         zIndex: 300,
         transform: open ? "translateX(0)" : "translateX(-100%)",
@@ -629,17 +1303,18 @@ const WalletScreen = ({ setCurrentPage }) => (
 // ── Shared Page Header ──────────────────────────────────────
 const PageHeader = ({ title, onBack, uppercase = false }) => (
   <div style={{
-    background: "#fff", padding: "15px 16px",
-    display: "flex", alignItems: "center", gap: 14,
+    background: "#fff",
     borderBottom: "1px solid #e5e7eb",
     position: "sticky", top: 0, zIndex: 10,
   }}>
-    <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
-      <Icon name="back" size={22} color="#222" />
-    </button>
-    <span style={{ fontWeight: 800, fontSize: 16, color: "#111", letterSpacing: uppercase ? 0.8 : 0, textTransform: uppercase ? "uppercase" : "none" }}>
-      {title}
-    </span>
+    <div style={{ ...layout.content, padding: "15px 0", display: "flex", alignItems: "center", gap: 14 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+        <Icon name="back" size={22} color="#222" />
+      </button>
+      <span style={{ fontWeight: 800, fontSize: 18, color: "#111", letterSpacing: uppercase ? 0.8 : 0, textTransform: uppercase ? "uppercase" : "none" }}>
+        {title}
+      </span>
+    </div>
   </div>
 );
 
@@ -819,6 +1494,306 @@ const OrdersScreen = () => (
   </div>
 );
 
+// ── Product List Screen ──────────────────────────────────────
+const productData = {
+  Capsules: {
+    bannerBg: "#fff",
+    bannerSvg: (
+      <svg viewBox="0 0 340 160" width="340" height="160">
+        {/* Two yellow oblong tablets stacked */}
+        <g transform="translate(170,55)">
+          <rect x="-90" y="-22" width="180" height="44" rx="22" fill="#f5c518"/>
+          <rect x="-90" y="-22" width="90" height="44" rx="22" fill="#e6a800"/>
+          <text x="-18" y="8" fontSize="22" fontWeight="bold" fill="#fff" fontFamily="sans-serif">L | U</text>
+        </g>
+        <g transform="translate(170,115)">
+          <rect x="-90" y="-22" width="180" height="44" rx="22" fill="#f5c518"/>
+          <rect x="-90" y="-22" width="90" height="44" rx="22" fill="#e6a800"/>
+          <text x="-24" y="8" fontSize="22" fontWeight="bold" fill="#fff" fontFamily="sans-serif">D 0 3</text>
+        </g>
+      </svg>
+    ),
+    products: [
+      { name: "A TRET 25MG CAPSULE", stars: 1, mrp: 0.0, price: 0.0, discount: 0.0, unit: "" },
+      { name: "ABCLOX 250MG/250MG CAPSULE", stars: 1, mrp: 0.0, price: 0.0, discount: 0.0, unit: "" },
+      { name: "AC DOX 250MG/250MG CAPSULE", stars: 1, mrp: 0.0, price: 0.0, discount: 0.0, unit: "" },
+    ],
+  },
+  capsule: {
+    bannerBg: "#fff",
+    bannerSvg: (
+      <svg viewBox="0 0 340 160" width="340" height="160">
+        {[
+          {x:240,y:30,r:-30},{x:120,y:25,r:20},{x:280,y:90,r:45},
+          {x:80,y:90,r:-10},{x:190,y:110,r:15},{x:60,y:135,r:30},{x:290,y:140,r:-20},
+        ].map((c,i)=>(
+          <g key={i} transform={`translate(${c.x},${c.y}) rotate(${c.r})`}>
+            <rect x="-45" y="-16" width="90" height="32" rx="16" fill="#7ac942"/>
+            <rect x="-45" y="-16" width="45" height="32" rx="16" fill="#5ba832"/>
+            {/* dots */}
+            {[[-20,-5],[-5,-5],[10,-5],[-20,6],[-5,6],[10,6]].map(([dx,dy],j)=>
+              <circle key={j} cx={dx+22} cy={dy} r="2.5" fill="#fff" opacity="0.6"/>
+            )}
+          </g>
+        ))}
+      </svg>
+    ),
+    products: [
+      { name: "CRESEMBA 100MG CAPSULE", stars: 1, mrp: 120.0, price: 120.0, discount: 0.0, unit: "capsule" },
+      { name: "GENERIC ZOLOFIT", stars: 1, mrp: 50.0, price: 50.0, discount: 0.0, unit: "box" },
+    ],
+  },
+  Medicine: {
+    bannerBg: "#fff",
+    bannerSvg: (
+      <svg viewBox="0 0 340 160" width="340" height="160">
+        <g transform="translate(170,88) rotate(-20)">
+          <rect x="-80" y="-34" width="160" height="68" rx="34" fill="#c8392b"/>
+          <rect x="-80" y="-34" width="80" height="68" rx="34" fill="#f0d9b5"/>
+        </g>
+      </svg>
+    ),
+    products: [
+      { name: "A 1 5MG TABLET 10 TABLETS IN 1 STRIP", stars: 4, mrp: 15.0, price: 15.0, discount: 0.0, unit: "10 tablets in 1 strip" },
+      { name: "A C FORD 100MG TABLET 4 TABLETS IN 1 STRIP", stars: 1, mrp: 597.0, price: 597.0, discount: 0.0, unit: "4 tablets in 1 strip" },
+      { name: "A CLO 200MG TABLET SR 10 TABLET SR IN 1 STRIP", stars: 1, mrp: 595.0, price: 595.0, discount: 0.0, unit: "10 tablets in 1 strip" },
+    ],
+  },
+  Injection: {
+    bannerBg: "#fff",
+    bannerSvg: (
+      <svg viewBox="0 0 340 160" width="340" height="160">
+        {/* Vial */}
+        <rect x="140" y="30" width="70" height="100" rx="12" fill="#d8b4fe"/>
+        <rect x="148" y="38" width="54" height="84" rx="8" fill="#ede9fe"/>
+        <rect x="140" y="30" width="70" height="22" rx="8" fill="#9333ea"/>
+        <text x="155" y="82" fontSize="9" fill="#7c3aed" fontWeight="bold">COVID</text>
+        <text x="158" y="94" fontSize="9" fill="#7c3aed" fontWeight="bold">-19</text>
+        {/* Left ampoule */}
+        <rect x="80" y="60" width="32" height="80" rx="10" fill="#fca5a5"/>
+        <rect x="80" y="60" width="32" height="20" rx="8" fill="#ef4444"/>
+        <text x="83" y="82" fontSize="6" fill="#fff" fontWeight="bold" transform="rotate(-90,96,100)">COVID-19</text>
+        {/* Right ampoule */}
+        <rect x="228" y="60" width="32" height="80" rx="10" fill="#fca5a5"/>
+        <rect x="228" y="60" width="32" height="20" rx="8" fill="#ef4444"/>
+        {/* Syringe */}
+        <rect x="170" y="68" width="120" height="14" rx="7" fill="#93c5fd" transform="rotate(-35,170,68)"/>
+        <rect x="268" y="110" width="6" height="20" rx="3" fill="#f97316" transform="rotate(-35,268,110)"/>
+      </svg>
+    ),
+    products: [
+      { name: "A CEF 1GM INJECTION 1 INJECTION IN 1 VIAL", stars: 4, mrp: 50.3, price: 45.3, discount: 5.0, unit: "1 Injection in 1 vial" },
+      { name: "A CEF 2GM INJECTION 1 INJECTION IN 1 VIAL", stars: 1, mrp: 149.9, price: 135.0, discount: 15.0, unit: "1 Injection in 1 vial" },
+      { name: "A CON 150MG INJECTION 2 ML IN 1 VIAL", stars: 1, mrp: 83.5, price: 75.2, discount: 8.3, unit: "2 ml in 1 vial" },
+    ],
+  },
+  Insulin: {
+    bannerBg: "#fff",
+    bannerSvg: (
+      <svg viewBox="0 0 340 160" width="340" height="160">
+        {/* Insulin pen */}
+        <rect x="40" y="95" width="200" height="28" rx="14" fill="#c8b89a"/>
+        <rect x="40" y="95" width="40" height="28" rx="14" fill="#6b7280"/>
+        <rect x="230" y="99" width="40" height="20" rx="10" fill="#d97706"/>
+        <circle cx="240" cy="109" r="8" fill="#f59e0b"/>
+        {/* Vial */}
+        <rect x="230" y="20" width="50" height="75" rx="10" fill="#e5e7eb"/>
+        <rect x="234" y="28" width="42" height="58" rx="7" fill="#f9fafb"/>
+        <rect x="230" y="20" width="50" height="18" rx="8" fill="#9ca3af"/>
+        <rect x="248" y="10" width="14" height="12" rx="3" fill="#6b7280"/>
+        {/* Syringe */}
+        <rect x="60" y="120" width="180" height="12" rx="6" fill="#d1d5db" transform="rotate(-8,60,120)"/>
+        <rect x="228" y="125" width="5" height="22" rx="2" fill="#9ca3af" transform="rotate(-8,228,125)"/>
+      </svg>
+    ),
+    products: [
+      { name: "ACTRAPID 100 IU/ML FLEXPEN 3 ML IN 1 FLEXPEN", stars: 5, mrp: 569.8, price: 512.8, discount: 57.0, unit: "3 ml in 1 flexpen" },
+      { name: "ACTRAPID 100IU/ML SOLUTION FOR INJECTION 10 ML IN 1 VIAL", stars: 1, mrp: 350.9, price: 315.8, discount: 35.1, unit: "10 ml in 1 vial" },
+      { name: "ACTRAPID HM 100IU/ML PENFILL 3 ML IN 1 PENFILL", stars: 1, mrp: 386.0, price: 347.4, discount: 38.6, unit: "3 ml in 1 penfill" },
+    ],
+  },
+  Bottle: {
+    bannerBg: "#fff",
+    bannerSvg: (
+      <svg viewBox="0 0 340 160" width="340" height="160">
+        <rect x="148" y="12" width="44" height="14" rx="7" fill="#9ca3af"/>
+        <path d="M140 26 Q130 50 128 80 L128 148 Q128 156 170 156 Q212 156 212 148 L212 80 Q210 50 200 26Z" fill="#e5e7eb"/>
+        <path d="M140 26 Q130 50 128 80 L128 148 Q128 156 170 156 Q212 156 212 148 L212 80 Q210 50 200 26Z" fill="#f9fafb" opacity="0.7"/>
+        <rect x="136" y="85" width="68" height="50" rx="4" fill="#f3f4f6"/>
+        <path d="M148 26 Q140 50 138 80 L202 80 Q198 50 192 26Z" fill="#d1fae5" opacity="0.5"/>
+      </svg>
+    ),
+    products: [
+      { name: "ACILOC 150MG SYRUP 100ML", stars: 3, mrp: 52.0, price: 47.0, discount: 5.0, unit: "100 ml bottle" },
+      { name: "ARISTOZYME LIQUID 200ML", stars: 2, mrp: 98.0, price: 88.0, discount: 10.0, unit: "200 ml bottle" },
+      { name: "BENADRYL COUGH SYRUP 100ML", stars: 4, mrp: 79.0, price: 71.0, discount: 8.0, unit: "100 ml bottle" },
+    ],
+  },
+  Syrup: {
+    bannerBg: "#fff",
+    bannerSvg: (
+      <svg viewBox="0 0 340 160" width="340" height="160">
+        {/* Pouring syrup bottle */}
+        <rect x="180" y="10" width="60" height="100" rx="12" fill="#fca5a5"/>
+        <rect x="184" y="18" width="52" height="84" rx="8" fill="#fecaca"/>
+        <rect x="180" y="10" width="60" height="20" rx="8" fill="#ef4444"/>
+        <rect x="196" y="2" width="28" height="10" rx="5" fill="#dc2626"/>
+        {/* Pouring liquid */}
+        <path d="M180 70 Q160 90 155 130 Q165 140 175 130 Q172 100 185 80Z" fill="#f87171" opacity="0.7"/>
+        {/* Spoon */}
+        <ellipse cx="120" cy="138" rx="40" ry="14" fill="#fca5a5" opacity="0.5"/>
+        <rect x="155" y="132" width="60" height="8" rx="4" fill="#d1d5db"/>
+      </svg>
+    ),
+    products: [
+      { name: "ALEX SYRUP 100ML", stars: 3, mrp: 85.0, price: 76.5, discount: 8.5, unit: "100 ml" },
+      { name: "BENADRYL DR 100ML", stars: 2, mrp: 97.0, price: 87.0, discount: 10.0, unit: "100 ml" },
+      { name: "COREX DX 100ML SYRUP", stars: 4, mrp: 110.0, price: 99.0, discount: 11.0, unit: "100 ml" },
+    ],
+  },
+};
+
+const categorySidebarItems = [
+  { key: "Capsules", label: "Capsules", svgThumb: (<svg viewBox="0 0 60 60" width="44" height="44"><g transform="translate(30,22)"><rect x="-22" y="-8" width="44" height="16" rx="8" fill="#f5c518"/><rect x="-22" y="-8" width="22" height="16" rx="8" fill="#e6a800"/></g><g transform="translate(30,40)"><rect x="-22" y="-8" width="44" height="16" rx="8" fill="#f5c518"/><rect x="-22" y="-8" width="22" height="16" rx="8" fill="#e6a800"/></g></svg>) },
+  { key: "capsule", label: "capsule", svgThumb: (<svg viewBox="0 0 60 60" width="44" height="44">{[{x:20,y:18,r:20},{x:40,y:15,r:-15},{x:15,y:38,r:30},{x:42,y:40,r:-30},{x:30,y:30,r:5}].map((c,i)=><g key={i} transform={`translate(${c.x},${c.y}) rotate(${c.r})`}><rect x="-14" y="-5" width="28" height="10" rx="5" fill="#7ac942"/><rect x="-14" y="-5" width="14" height="10" rx="5" fill="#5ba832"/></g>)}</svg>) },
+  { key: "Medicine", label: "Medicine", svgThumb: (<svg viewBox="0 0 60 60" width="44" height="44"><g transform="translate(30,30) rotate(-20)"><rect x="-20" y="-9" width="40" height="18" rx="9" fill="#c8392b"/><rect x="-20" y="-9" width="20" height="18" rx="9" fill="#f0d9b5"/></g></svg>) },
+  { key: "Injection", label: "Injection", svgThumb: (<svg viewBox="0 0 60 60" width="44" height="44"><rect x="20" y="8" width="18" height="44" rx="6" fill="#fca5a5"/><rect x="20" y="8" width="18" height="14" rx="6" fill="#ef4444"/><rect x="26" y="2" width="6" height="8" rx="3" fill="#dc2626"/><rect x="14" y="28" width="32" height="8" rx="4" fill="#93c5fd" transform="rotate(-40,30,32)"/></svg>) },
+  { key: "Insulin", label: "Insulin", svgThumb: (<svg viewBox="0 0 60 60" width="44" height="44"><rect x="6" y="30" width="48" height="12" rx="6" fill="#c8b89a"/><rect x="6" y="30" width="12" height="12" rx="6" fill="#6b7280"/><rect x="48" y="32" width="10" height="8" rx="4" fill="#d97706"/><rect x="32" y="8" width="14" height="26" rx="5" fill="#e5e7eb"/><rect x="32" y="8" width="14" height="8" rx="4" fill="#9ca3af"/></svg>) },
+  { key: "Bottle", label: "Bottle", svgThumb: (<svg viewBox="0 0 60 60" width="44" height="44"><rect x="24" y="2" width="12" height="6" rx="3" fill="#9ca3af"/><path d="M22 8 Q18 18 17 30 L17 55 Q17 58 30 58 Q43 58 43 55 L43 30 Q42 18 38 8Z" fill="#e5e7eb"/><rect x="20" y="32" width="20" height="16" rx="3" fill="#f3f4f6"/></svg>) },
+  { key: "Syrup", label: "Syrup", svgThumb: (<svg viewBox="0 0 60 60" width="44" height="44"><rect x="22" y="6" width="20" height="36" rx="6" fill="#fca5a5"/><rect x="22" y="6" width="20" height="10" rx="6" fill="#ef4444"/><rect x="27" y="2" width="10" height="6" rx="3" fill="#dc2626"/><path d="M22 28 Q14 36 12 50 Q18 54 22 50 Q20 40 26 32Z" fill="#f87171" opacity="0.7"/></svg>) },
+];
+
+const StarRating = ({ count }) => (
+  <div style={{ display: "flex", gap: 2 }}>
+    {[1,2,3,4,5].map(i => (
+      <svg key={i} width={14} height={14} viewBox="0 0 24 24">
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+          fill={i <= count ? "#f59e0b" : "#e5e7eb"} stroke={i <= count ? "#f59e0b" : "#d1d5db"} strokeWidth="1"/>
+      </svg>
+    ))}
+  </div>
+);
+
+const ProductListScreen = ({ setCurrentPage, initialCategory = "Capsules" }) => {
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  const [cart, setCart] = useState({});
+  const data = productData[activeCategory] || productData["Capsules"];
+  const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+  const totalPrice = Object.entries(cart).reduce((sum, [key, qty]) => {
+    const [cat, idx] = key.split("__");
+    const p = productData[cat]?.products[Number(idx)];
+    return p ? sum + p.price * qty : sum;
+  }, 0);
+
+  const addToCart = (cat, idx) => {
+    const key = `${cat}__${idx}`;
+    setCart(prev => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "transparent" }}>
+      {/* Header */}
+      <div style={{ background: "#fff", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", flexShrink: 0 }}>
+        <button onClick={() => setCurrentPage("home")} style={{ background: "none", border: "none", cursor: "pointer" }}>
+          <Icon name="back" size={22} color="#222" />
+        </button>
+        <span style={{ fontWeight: 800, fontSize: 20, color: "#111" }}>Product List</span>
+        <button style={{ background: "none", border: "none", cursor: "pointer" }}>
+          <Icon name="search" size={22} color="#222" />
+        </button>
+      </div>
+
+      {/* Body: left sidebar + right content */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", padding: "20px" }}>
+        {/* Left sidebar */}
+        <div style={{
+          width: 170, flexShrink: 0, background: "#f8fafc",
+          overflowY: "auto", borderRight: "1px solid #e5e7eb", borderRadius: 20,
+        }}>
+          {categorySidebarItems.map(cat => (
+            <button key={cat.key} onClick={() => setActiveCategory(cat.key)} style={{
+              width: "100%", background: activeCategory === cat.key ? "#fff" : "transparent",
+              border: "none", borderLeft: activeCategory === cat.key ? `3px solid ${theme.green}` : "3px solid transparent",
+              padding: "14px 12px", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+            }}>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#f0f2f5", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                {cat.svgThumb}
+              </div>
+              <span style={{ fontSize: 12, color: activeCategory === cat.key ? theme.green : "#555", fontWeight: activeCategory === cat.key ? 700 : 500, textAlign: "center", lineHeight: 1.3 }}>{cat.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Right product panel */}
+        <div style={{ flex: 1, overflowY: "auto", paddingBottom: 90, minWidth: 0, paddingLeft: 20 }}>
+          {/* Banner */}
+          <div style={{ background: data.bannerBg, margin: "0 0 12px", borderRadius: 20, overflow: "hidden", position: "relative", boxShadow: "0 10px 24px rgba(15,23,42,0.08)" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, background: theme.green, padding: "6px 16px 6px 12px", borderRadius: "12px 0 16px 0", zIndex: 1 }}>
+              <span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>{activeCategory}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 220, padding: "16px" }}>
+              {data.bannerSvg}
+            </div>
+          </div>
+
+          {/* Product cards */}
+          {data.products.map((p, i) => (
+            <div key={i} style={{ background: "#fff", margin: "0 0 14px", borderRadius: 20, padding: "18px", boxShadow: "0 10px 24px rgba(15,23,42,0.08)", position: "relative", border: "1px solid #eef2f7" }}>
+              {/* Discount badge */}
+              <div style={{ position: "absolute", top: 0, left: 0, background: theme.green, borderRadius: "12px 0 10px 0", padding: "3px 10px" }}>
+                <span style={{ color: "#fff", fontSize: 10, fontWeight: 700 }}>₹ {p.discount.toFixed(1)} Off</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 14 }}>
+                {/* Placeholder product image / reload icon */}
+                <div style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width={32} height={32} viewBox="0 0 24 24" fill="none">
+                    <path d="M1 4v6h6" stroke="#9ca3af" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M3.51 15a9 9 0 102.13-9.36L1 10" stroke="#9ca3af" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: "#111", lineHeight: 1.4, marginBottom: 4 }}>{p.name}</div>
+                  <StarRating count={p.stars} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
+                    <span style={{ fontSize: 11, color: "#aaa", textDecoration: "line-through" }}>₹{p.mrp.toFixed(1)}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#111" }}>₹ {p.price.toFixed(1)}</span>
+                  </div>
+                  {p.unit ? <div style={{ fontSize: 10, color: "#aaa", marginTop: 2 }}>{p.unit}</div> : null}
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                <button
+                  onClick={() => addToCart(activeCategory, i)}
+                  style={{ background: theme.green, color: "#fff", border: "none", borderRadius: 20, padding: "7px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> ADD
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom cart bar */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "rgba(255,255,255,0.95)", borderTop: "1px solid #e5e7eb",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "12px 20px", zIndex: 50, backdropFilter: "blur(10px)",
+      }}>
+        <div>
+          <div style={{ fontSize: 12, color: "#666" }}>{totalItems} Items</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#111" }}>₹ {totalPrice.toFixed(2)}</div>
+        </div>
+        <button style={{ background: theme.green, color: "#fff", border: "none", borderRadius: 999, padding: "12px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+          Go to cart
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // Chat Screen
 const ChatScreen = () => (
   <div style={style.screen}>
@@ -841,8 +1816,12 @@ export default function App() {
   };
 
   const renderScreen = () => {
+    if (currentPage.startsWith("products:")) {
+      const cat = currentPage.split(":")[1];
+      return <ProductListScreen setCurrentPage={setCurrentPage} initialCategory={cat} />;
+    }
     switch (currentPage) {
-      case "home": return <HomeScreen setSidebarOpen={setSidebarOpen} />;
+      case "home": return <HomeScreen setSidebarOpen={setSidebarOpen} setCurrentPage={setCurrentPage} />;
       case "search": return <SearchScreen />;
       case "orders": return <OrdersScreen />;
       case "wallet": return <WalletScreen setCurrentPage={setCurrentPage} />;
@@ -852,16 +1831,16 @@ export default function App() {
       case "about": return <AboutScreen setCurrentPage={setCurrentPage} />;
       case "privacy": return <PrivacyScreen setCurrentPage={setCurrentPage} />;
       case "contact": return <ContactScreen setCurrentPage={setCurrentPage} />;
-      default: return <HomeScreen setSidebarOpen={setSidebarOpen} />;
+      default: return <HomeScreen setSidebarOpen={setSidebarOpen} setCurrentPage={setCurrentPage} />;
     }
   };
 
-  const hideBottomNav = ["profile", "retailer", "about", "privacy", "contact"].includes(currentPage);
+  const hideBottomNav = ["profile", "retailer", "about", "privacy", "contact"].includes(currentPage) || currentPage.startsWith("products:");
 
   return (
-    <div style={{ background: "#d1d5db", minHeight: "100vh", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
+    <div style={{ background: "#e8eef5", minHeight: "100vh" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet" />
-      <div style={{ ...style.app, height: "calc(100vh - 40px)", maxHeight: 820, overflowY: "auto" }}>
+      <div style={style.app}>
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} setCurrentPage={(page) => { setCurrentPage(page); setSidebarOpen(false); }} />
         {renderScreen()}
         {!hideBottomNav && <BottomNav active={activeTab} setActive={handleTabChange} />}
