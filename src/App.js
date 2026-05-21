@@ -1,9 +1,9 @@
 
 import "./App.css";
-import MedApp from "./medapp";
+import App from "./components/MedApp/index";
 
-function App() {
-  return <MedApp />;
+function AppWrapper() {
+  return <App />;
 }
 
-export default App;
+export default AppWrapper;
