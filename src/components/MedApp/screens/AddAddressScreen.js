@@ -278,6 +278,19 @@ export const AddAddressScreen = ({ setCurrentPage, appState }) => {
         >
           {isSaving ? "Saving..." : "SAVE"}
         </button>
+
+        {addresses.length > 0 ? (
+          <button
+            onClick={() => setCurrentPage("checkout")}
+            style={{
+              ...primaryButtonStyle,
+              marginTop: 8,
+              background: theme.blue,
+            }}
+          >
+            Proceed to Checkout
+          </button>
+        ) : null}
       </div>
     </div>
   );

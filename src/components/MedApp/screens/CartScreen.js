@@ -163,7 +163,7 @@ export const CartScreen = ({ setCurrentPage, appState }) => {
             </div>
 
             <button
-              onClick={() => alert("Checkout is not implemented yet.")}
+              onClick={() => setCurrentPage("checkout")}
               style={{
                 width: "100%",
                 borderRadius: 18,

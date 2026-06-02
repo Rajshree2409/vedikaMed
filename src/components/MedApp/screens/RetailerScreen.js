@@ -76,7 +76,8 @@ export const RetailerScreen = ({ setCurrentPage, appState }) => {
   const { session } = appState;
   const [form, setForm] = useState(() => ({
     ...buildInitialRetailerForm(session),
-    serverUrl: process.env.REACT_APP_MEDAPP_API_BASE || "https://dummy-server-url.com/api",
+    // Leave serverUrl empty so api helpers fall back to configured base (proxy or remote)
+    serverUrl: process.env.REACT_APP_MEDAPP_API_BASE || "",
   }));
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

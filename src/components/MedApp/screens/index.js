@@ -7,6 +7,8 @@ export { ProfileScreen } from "./ProfileScreen";
 export { ProfileEditScreen } from "./ProfileEditScreen";
 export { AccountsScreen } from "./AccountsScreen";
 export { AddAddressScreen } from "./AddAddressScreen";
+export { CheckoutScreen } from "./CheckoutScreen";
+export { OrderConfirmationScreen } from "./OrderConfirmationScreen";
 export { LogoutScreen } from "./LogoutScreen";
 export { RetailerScreen } from "./RetailerScreen";
 export { LabTestScreen } from "./LabTestScreen";

@@ -24,6 +24,8 @@ import {
   ProfileEditScreen,
   AccountsScreen,
   AddAddressScreen,
+  CheckoutScreen,
+  OrderConfirmationScreen,
   LogoutScreen,
   RetailerScreen,
   AboutScreen,
@@ -43,6 +45,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(() => (readStoredSession()?.userId ? "home" : "login"));
   const [activeTab, setActiveTab] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [orderData, setOrderData] = useState(null);
 
   useEffect(() => {
     writeStoredSession(session);
@@ -63,7 +66,10 @@ export default function App() {
     }
   }, [session]);
 
-  const navigate = (page) => {
+  const navigate = (page, data) => {
+    if (page.startsWith("order:confirmation")) {
+      setOrderData(data);
+    }
     setCurrentPage(page);
 
     if (BOTTOM_NAV_PAGES.has(page)) {
@@ -107,6 +113,10 @@ export default function App() {
       return <DoctorAppointmentScreen {...screenProps} doctorId={doctorId} />;
     }
 
+    if (currentPage.startsWith("order:confirmation")) {
+      return <OrderConfirmationScreen {...screenProps} orderData={orderData} />;
+    }
+
     switch (currentPage) {
       case "login":
         return <LoginScreen {...screenProps} />;
@@ -134,6 +144,8 @@ export default function App() {
         return <AccountsScreen {...screenProps} />;
       case "add_address":
         return <AddAddressScreen {...screenProps} />;
+      case "checkout":
+        return <CheckoutScreen {...screenProps} />;
       case "logout":
         return <LogoutScreen {...screenProps} onLogout={handleLogout} />;
       case "retailer":
@@ -152,9 +164,10 @@ export default function App() {
   };
 
   const hideBottomNav =
-    ["login", "otp", "profile", "edit_profile", "add_address", "logout", "retailer", "about", "privacy", "contact"].includes(currentPage) ||
+    ["login", "otp", "profile", "edit_profile", "add_address", "checkout", "logout", "retailer", "about", "privacy", "contact"].includes(currentPage) ||
     currentPage.startsWith("products:") ||
-    currentPage.startsWith("doctor-appointment:");
+    currentPage.startsWith("doctor-appointment:") ||
+    currentPage.startsWith("order:confirmation");
 
   return (
     <div style={{ background: "#e8eef5", minHeight: "100vh" }}>
