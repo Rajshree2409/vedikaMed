@@ -7,38 +7,50 @@ import {
   layout,
 } from "../components.js";
 import {
+  cancelOrder,
+  updateStoredOrderStatus,
+} from "../api.js";
+import {
   primaryButtonStyle,
   surfaceCardStyle,
   mutedTextStyle,
   formatCurrency,
   InlineMessage,
+  getErrorMessage,
 } from "./shared.js";
 
-export const OrderConfirmationScreen = ({ setCurrentPage, appState, orderData }) => {
+export const OrderConfirmationScreen = ({ setCurrentPage, appState, orderData, mode = "confirmation" }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showItemNames, setShowItemNames] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState("muted");
 
   // Generate a simple order ID based on timestamp
   const orderId = orderData?.orderId || "ORD" + Date.now().toString().slice(-8);
   const orderDate = orderData?.createdAt ? new Date(orderData.createdAt).toLocaleString() : new Date().toLocaleString();
+  const isHistoryView = mode === "details";
+  const summaryItems = orderData?.items?.length ? orderData.items : (orderData?.raw?.Items ? orderData.raw.Items : []);
+  const deliveryAddress = orderData?.deliveryAddress || orderData?.raw?.deliveryAddress || null;
 
   const handleCancelOrder = async () => {
     setIsCancelling(true);
 
     try {
-      // In a real app, you would call an API to cancel the order
-      // For now, we'll just show a success message and navigate back to home
+      if (!orderData?.orderId) {
+        throw new Error("Order ID is missing.");
+      }
+
+      await cancelOrder(orderData.orderId);
+      updateStoredOrderStatus(orderData.orderId, "Cancelled");
       setMessage("Order cancelled successfully.");
       setMessageTone("success");
 
-      // Navigate back to home after a brief delay
       setTimeout(() => {
         setCurrentPage("home");
       }, 2000);
     } catch (error) {
-      setMessage("Unable to cancel order. Please try again.");
+      setMessage(getErrorMessage ? getErrorMessage(error, "Unable to cancel order. Please try again.") : "Unable to cancel order. Please try again.");
       setMessageTone("error");
     } finally {
       setIsCancelling(false);
@@ -58,13 +70,13 @@ export const OrderConfirmationScreen = ({ setCurrentPage, appState, orderData })
 
   return (
     <div style={style.screen}>
-      <PageHeader title="Order Confirmed!" onBack={() => setCurrentPage("home")} uppercase />
+      <PageHeader title={isHistoryView ? "Order Details" : "Order Confirmed!"} onBack={() => setCurrentPage(isHistoryView ? "orders" : "home")} uppercase />
       <div style={{ ...layout.narrowContent, padding: "16px 0 24px", display: "flex", flexDirection: "column", gap: 18 }}>
         {/* Success Message */}
         <div style={{ ...surfaceCardStyle, padding: 20, textAlign: "center", background: "rgba(16, 185, 129, 0.1)", borderLeft: `4px solid ${theme.green}` }}>
           <div style={{ fontSize: 24, fontWeight: 800, color: theme.green, marginBottom: 8 }}>✓</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: theme.navy, marginBottom: 4 }}>Order Confirmed!</div>
-          <div style={{ fontSize: 13, color: theme.grayText }}>Your order has been successfully placed</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: theme.navy, marginBottom: 4 }}>{isHistoryView ? "Order Details" : "Order Confirmed!"}</div>
+          <div style={{ fontSize: 13, color: theme.grayText }}>{isHistoryView ? "Review all recorded details for this order." : "Your order has been successfully placed"}</div>
         </div>
 
         {/* Order Details */}
@@ -87,73 +99,124 @@ export const OrderConfirmationScreen = ({ setCurrentPage, appState, orderData })
             </div>
             <div>
               <div style={{ fontSize: 12, color: theme.grayText, marginBottom: 4 }}>Status</div>
-              <div style={{ fontWeight: 700, color: theme.green, fontSize: 14 }}>Confirmed</div>
+              <div style={{ fontWeight: 700, color: (orderData?.orderStatus || "Confirmed").toLowerCase().includes("cancel") ? theme.red : theme.green, fontSize: 14 }}>{orderData?.orderStatus || "Confirmed"}</div>
             </div>
           </div>
         </div>
 
         {/* Order Items */}
         <div style={{ ...surfaceCardStyle, padding: 18 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: theme.navy, marginBottom: 12 }}>
-            Items Ordered
-          </div>
-          {orderData.items && orderData.items.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {orderData.items.map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingBottom: 12,
-                    borderBottom: index < orderData.items.length - 1 ? "1px solid #e2e8f0" : "none",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: theme.navy, marginBottom: 4 }}>
-                      {item.productName}
+          <button
+            type="button"
+            onClick={() => setShowItemNames((prev) => !prev)}
+            style={{
+              width: "100%",
+              border: "none",
+              background: "transparent",
+              textAlign: "left",
+              padding: 0,
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ fontWeight: 700, fontSize: 15, color: theme.navy, marginBottom: 4 }}>
+              Items Ordered
+            </div>
+            <div style={{ fontSize: 13, color: theme.grayText, marginBottom: 4 }}>
+              {summaryItems.length} product line(s) • {summaryItems.reduce((sum, item) => sum + (item.quantity || item.Quantity || item.qty || item.Qty || 1), 0)} item(s) ordered
+            </div>
+            <div style={{ fontSize: 12, color: theme.blue, fontWeight: 700 }}>
+              {showItemNames ? "Tap to hide product names" : "Tap to view product names"}
+            </div>
+          </button>
+
+          {showItemNames && summaryItems && summaryItems.length > 0 ? (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+              {summaryItems.map((item, index) => {
+                const name = item.productName || item.ProductName || item.Name || `Item ${index + 1}`;
+                const qty = item.quantity || item.Quantity || item.qty || 1;
+                const rate = item.rate || item.Rate || item.Price || item.UnitPrice || 0;
+                const total = item.total || item.Total || item.Amount || (Number(qty) * Number(rate));
+                const productId = item.productId || item.ProductId || item.ProductID || item.Id || "";
+                const brand = item.brandName || item.BrandName || item.Brand || "";
+                const category = item.categoryName || item.CategoryName || item.Category || "";
+
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 14,
+                      padding: 12,
+                      background: "#fff",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 800, color: theme.navy, fontSize: 14, marginBottom: 4 }}>{name}</div>
+                        {productId ? <div style={{ fontSize: 12, color: theme.grayText }}>Product ID: {productId}</div> : null}
+                        {brand ? <div style={{ fontSize: 12, color: theme.grayText }}>Brand: {brand}</div> : null}
+                        {category ? <div style={{ fontSize: 12, color: theme.grayText }}>Category: {category}</div> : null}
+                      </div>
+                      <div style={{ textAlign: "right", fontWeight: 800, color: theme.green, whiteSpace: "nowrap" }}>
+                        {formatCurrency(total)}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 13, color: theme.grayText }}>
-                      Qty: {item.quantity}
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+                      <div style={{ ...surfaceCardStyle, padding: 10, background: "#f8fafc" }}>
+                        <div style={{ fontSize: 11, color: theme.grayText, textTransform: "uppercase", letterSpacing: 0.4 }}>Quantity</div>
+                        <div style={{ fontWeight: 700, color: theme.navy, fontSize: 14 }}>{qty}</div>
+                      </div>
+                      <div style={{ ...surfaceCardStyle, padding: 10, background: "#f8fafc" }}>
+                        <div style={{ fontSize: 11, color: theme.grayText, textTransform: "uppercase", letterSpacing: 0.4 }}>Rate</div>
+                        <div style={{ fontWeight: 700, color: theme.navy, fontSize: 14 }}>{formatCurrency(rate)}</div>
+                      </div>
+                      <div style={{ ...surfaceCardStyle, padding: 10, background: "#f8fafc" }}>
+                        <div style={{ fontSize: 11, color: theme.grayText, textTransform: "uppercase", letterSpacing: 0.4 }}>Total</div>
+                        <div style={{ fontWeight: 700, color: theme.navy, fontSize: 14 }}>{formatCurrency(total)}</div>
+                      </div>
+                      <div style={{ ...surfaceCardStyle, padding: 10, background: "#f8fafc" }}>
+                        <div style={{ fontSize: 11, color: theme.grayText, textTransform: "uppercase", letterSpacing: 0.4 }}>Status</div>
+                        <div style={{ fontWeight: 700, color: (orderData?.orderStatus || "Confirmed").toLowerCase().includes("cancel") ? theme.red : theme.green, fontSize: 14 }}>{orderData?.orderStatus || "Confirmed"}</div>
+                      </div>
                     </div>
                   </div>
-                  <div style={{ textAlign: "right", fontWeight: 700, color: theme.navy }}>
-                    {formatCurrency(item.total)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : null}
         </div>
 
         {/* Delivery Address */}
-        {orderData.deliveryAddress ? (
+        {deliveryAddress ? (
           <div style={{ ...surfaceCardStyle, padding: 18 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: theme.navy, marginBottom: 12 }}>
               Delivery Address
             </div>
             <div style={{ ...mutedTextStyle }}>
               <div style={{ fontWeight: 700, color: theme.navy, marginBottom: 6 }}>
-                {orderData.deliveryAddress.name} • {orderData.deliveryAddress.addressType || "Home"}
+                {deliveryAddress.name} • {deliveryAddress.addressType || "Home"}
               </div>
               <div style={{ marginBottom: 4, fontSize: 14, color: theme.navy }}>
-                {orderData.deliveryAddress.mobileNumber}
+                {deliveryAddress.mobileNumber}
               </div>
               <div style={{ marginBottom: 4 }}>
-                {orderData.deliveryAddress.address}
+                {deliveryAddress.address}
               </div>
-              {orderData.deliveryAddress.location && (
+              {deliveryAddress.location && (
                 <div style={{ marginBottom: 4 }}>
-                  Landmark: {orderData.deliveryAddress.location}
+                  Landmark: {deliveryAddress.location}
                 </div>
               )}
               <div style={{ marginBottom: 4 }}>
-                {orderData.deliveryAddress.city}
-                {orderData.deliveryAddress.district ? `, ${orderData.deliveryAddress.district}` : ""}
+                {deliveryAddress.city}
+                {deliveryAddress.district ? `, ${deliveryAddress.district}` : ""}
               </div>
               <div style={{ marginBottom: 4 }}>
-                {orderData.deliveryAddress.state} - {orderData.deliveryAddress.pinCode}
+                {deliveryAddress.state} - {deliveryAddress.pinCode}
               </div>
               <div style={{ marginTop: 8, fontSize: 12, color: theme.grayText }}>
                 Saved address details shown above
@@ -168,7 +231,7 @@ export const OrderConfirmationScreen = ({ setCurrentPage, appState, orderData })
             <div>
               <div style={{ color: theme.grayText, fontSize: 13 }}>Total Items</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: theme.navy }}>
-                {orderData.items ? orderData.items.reduce((sum, item) => sum + item.quantity, 0) : 0}
+                {summaryItems ? summaryItems.reduce((sum, item) => sum + (item.quantity || item.Quantity || 1), 0) : 0}
               </div>
             </div>
             <div style={{ textAlign: "right" }}>

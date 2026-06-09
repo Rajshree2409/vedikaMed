@@ -8,6 +8,8 @@ import {
 } from "../components.js";
 import {
   fetchAddresses,
+  createOrder,
+  saveOrderToHistory,
 } from "../api.js";
 import {
   formInputStyle,
@@ -27,7 +29,6 @@ export const CheckoutScreen = ({ setCurrentPage, appState }) => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState("muted");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const cartEntries = Object.entries(cart || {});
   const totalItems = cartEntries.reduce((sum, [, item]) => sum + item.qty, 0);
@@ -100,17 +101,62 @@ export const CheckoutScreen = ({ setCurrentPage, appState }) => {
         (addr) => addr.addressId === selectedAddressId
       );
 
+      const items = cartEntries.map(([, item]) => ({
+        ProductId: item.product.productId,
+        ProductName: item.product.productName,
+        Quantity: item.qty,
+        Rate: item.product.price,
+        Total: (item.product.price || 0) * item.qty,
+      }));
+
+      const orderPayload = {
+        UserId: session.userId,
+        TotalNumberOfProduct: cartEntries.length,
+        TotalQty: totalItems,
+        IemTotalMrp: totalPrice,
+        PriceDiscounts: 0,
+        ShipingFee: 0,
+        PaidAmount: totalPrice,
+        TotalSaving: 0,
+        PaymentStatus: "Pending",
+        PaymentDate: new Date().toISOString(),
+        OrderStaus: "Confirmed",
+        Address: selectedAddress.address,
+        City: selectedAddress.city,
+        State: selectedAddress.state,
+        Pincode: selectedAddress.pinCode,
+        MobileNumber: selectedAddress.mobileNumber,
+        Name: selectedAddress.name,
+        VendorId: session.vendor?.vendorId || "1028",
+        Items: items,
+      };
+
+      const orderResponse = await createOrder(orderPayload);
+      const createdOrderId = typeof orderResponse === "string" ? orderResponse.replace(/^"|"$/g, "") : String(orderResponse?.OrderPrimaryId || orderResponse?.OrderId || orderResponse);
+
+      saveOrderToHistory({
+        orderId: createdOrderId,
+        createdAt: new Date().toISOString(),
+        paidAmount: totalPrice,
+        numberOfProducts: cartEntries.length,
+        orderStatus: "Confirmed",
+        address: selectedAddress.address,
+        city: selectedAddress.city,
+        state: selectedAddress.state,
+        pinCode: selectedAddress.pinCode,
+        mobileNumber: selectedAddress.mobileNumber,
+        name: selectedAddress.name,
+        vendorId: session.vendor?.vendorId || "1028",
+        shippingFee: 0,
+      });
+
       const orderData = {
-        userId: session.userId,
-        items: cartEntries.map(([, item]) => ({
-          productId: item.product.productId,
-          productName: item.product.productName,
-          price: item.product.price,
-          quantity: item.qty,
-          total: (item.product.price || 0) * item.qty,
-        })),
+        orderId: createdOrderId,
+        items,
         totalAmount: totalPrice,
-        paymentMethod: "COD",
+        paymentMethod: "Cash on Delivery",
+        orderStatus: "Confirmed",
+        createdAt: new Date().toISOString(),
         deliveryAddress: {
           addressId: selectedAddress.addressId,
           name: selectedAddress.name,
@@ -123,18 +169,10 @@ export const CheckoutScreen = ({ setCurrentPage, appState }) => {
           pinCode: selectedAddress.pinCode,
           addressType: selectedAddress.addressType,
         },
-        orderStatus: "Confirmed",
-        createdAt: new Date().toISOString(),
       };
 
-      // Clear the cart and show success modal, then redirect to home
       setCart({});
-      setShowSuccessModal(true);
-
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        setCurrentPage("home");
-      }, 1800);
+      setCurrentPage("order:confirmation", orderData);
     } catch (error) {
       setMessage(getErrorMessage(error, "Unable to confirm order."));
       setMessageTone("error");
@@ -321,25 +359,6 @@ export const CheckoutScreen = ({ setCurrentPage, appState }) => {
           {isConfirming ? "Confirming..." : `Confirm Order - ${formatCurrency(totalPrice)}`}
         </button>
       </div>
-      {showSuccessModal ? (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.36)",
-            zIndex: 9999,
-          }}
-        >
-          <div style={{ background: theme.white, padding: 26, borderRadius: 14, textAlign: "center", minWidth: 260 }}>
-            <div style={{ fontSize: 40, color: theme.green, fontWeight: 800 }}>✓</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: theme.navy, marginTop: 8 }}>Order placed successfully</div>
-            <div style={{ fontSize: 13, color: theme.grayText, marginTop: 6 }}>Redirecting to home...</div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 };

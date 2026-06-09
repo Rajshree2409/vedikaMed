@@ -73,9 +73,9 @@ import {
 } from "./shared.js";
 
 export const AccountsScreen = ({ setCurrentPage, appState }) => {
-  const { session } = appState;
+  const { session, setSession } = appState;
   const [form, setForm] = useState(() => ({
-    serverUrl: process.env.REACT_APP_MEDAPP_API_BASE || "https://dummy-server-url.com/api",
+    serverUrl: process.env.REACT_APP_MEDAPP_API_BASE || "",
     name: "",
     email: "",
     address: "",
@@ -144,18 +144,16 @@ export const AccountsScreen = ({ setCurrentPage, appState }) => {
       return;
     }
 
-    if (!form.serverUrl.trim()) {
-      setErrorMessage("Server URL is required.");
-      setSuccessMessage("");
-      return;
-    }
-
     setErrorMessage("");
     setSuccessMessage("");
     setIsSaving(true);
 
     try {
       await saveAccountDetails(form.serverUrl, session.userId, form);
+      setSession((previousSession) => ({
+        ...(previousSession || {}),
+        name: form.name,
+      }));
       setSuccessMessage("Account details saved successfully.");
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Unable to save account details."));
@@ -177,7 +175,7 @@ export const AccountsScreen = ({ setCurrentPage, appState }) => {
             style={formInputStyle}
           />
           <div style={{ fontSize: 12, color: theme.grayText, marginTop: 8 }}>
-            Enter the backend server URL here. If no real URL is available, a dummy URL will be used for testing.
+            Optional. Leave this blank to use the app backend.
           </div>
         </div>
 

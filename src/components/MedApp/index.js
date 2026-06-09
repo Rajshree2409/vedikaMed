@@ -67,8 +67,8 @@ export default function App() {
   }, [session]);
 
   const navigate = (page, data) => {
-    if (page.startsWith("order:confirmation")) {
-      setOrderData(data);
+    if (page.startsWith("order:")) {
+      setOrderData(data || null);
     }
     setCurrentPage(page);
 
@@ -113,8 +113,8 @@ export default function App() {
       return <DoctorAppointmentScreen {...screenProps} doctorId={doctorId} />;
     }
 
-    if (currentPage.startsWith("order:confirmation")) {
-      return <OrderConfirmationScreen {...screenProps} orderData={orderData} />;
+    if (currentPage.startsWith("order:")) {
+      return <OrderConfirmationScreen {...screenProps} orderData={orderData} mode={currentPage === "order:details" ? "details" : "confirmation"} />;
     }
 
     switch (currentPage) {
@@ -158,16 +158,20 @@ export default function App() {
         return <PrivacyScreen {...screenProps} />;
       case "contact":
         return <ContactScreen {...screenProps} />;
+      case "support":
+        return <ContactScreen {...screenProps} mode="support" />;
+      case "feedback":
+        return <ContactScreen {...screenProps} mode="feedback" />;
       default:
         return <HomeScreen {...screenProps} setSidebarOpen={setSidebarOpen} />;
     }
   };
 
   const hideBottomNav =
-    ["login", "otp", "profile", "edit_profile", "add_address", "checkout", "logout", "retailer", "about", "privacy", "contact"].includes(currentPage) ||
+    ["login", "otp", "profile", "edit_profile", "add_address", "checkout", "logout", "retailer", "about", "privacy", "contact", "support", "feedback"].includes(currentPage) ||
     currentPage.startsWith("products:") ||
     currentPage.startsWith("doctor-appointment:") ||
-    currentPage.startsWith("order:confirmation");
+    currentPage.startsWith("order:");
 
   return (
     <div style={{ background: "#e8eef5", minHeight: "100vh" }}>

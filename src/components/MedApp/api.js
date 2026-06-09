@@ -21,6 +21,7 @@ const STORAGE_KEYS = {
   pendingOtp: "medapp.pendingOtp",
   selectedVendor: "medapp.selectedVendor",
   session: "medapp.session",
+  orderHistory: "medapp.orderHistory",
 };
 
 export const DEFAULT_VENDOR = {
@@ -56,7 +57,7 @@ const shouldUseDevProxy = () => {
   return process.env.NODE_ENV === "development";
 };
 
-const DEFAULT_ACCOUNT_API_BASE = "https://dummy-server-url.com/api";
+const DEFAULT_ACCOUNT_API_BASE = REMOTE_API_BASE;
 
 const getApiBase = () => {
   const configuredBase = getConfiguredBase();
@@ -102,6 +103,19 @@ const toNumber = (value, fallback = 0) => {
 };
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
+
+const getOrderItemQuantity = (item = {}) => toNumber(item.Quantity ?? item.quantity ?? item.qty ?? item.Qty ?? item.TotalQty, 1);
+
+const getTotalOrderedQty = (order = {}) => {
+  const items = asArray(order.Items || order.items || order.OrderItems || order.orderItems);
+  const fromItems = items.reduce((sum, item) => sum + getOrderItemQuantity(item), 0);
+
+  if (fromItems > 0) {
+    return fromItems;
+  }
+
+  return toNumber(order.TotalQty ?? order.totalQty ?? order.Quantity ?? order.quantity, 0);
+};
 
 const readStorage = (key, fallbackValue = null) => {
   if (typeof window === "undefined") {
@@ -354,28 +368,40 @@ export const normalizeWallet = (payload) => {
   };
 };
 
-export const normalizeOrder = (order = {}) => ({
-  address: firstNonEmpty(order.Address, order.DeliveryAddress),
-  addressType: firstNonEmpty(order.AddressType),
-  city: firstNonEmpty(order.City),
-  createdAt: firstNonEmpty(order.PaymentDate, order.OrderDate, order.CreatedDate),
-  district: firstNonEmpty(order.District),
-  invoiceStatus: firstNonEmpty(order.InvoiceStatus),
-  mobileNumber: firstNonEmpty(order.MobileNumber, order.DeliveryMobileNumber),
-  name: firstNonEmpty(order.Name, order.CustomerName),
-  numberOfProducts: firstNonEmpty(order.NumberOfProduct, order.TotalNumberOfProduct),
-  orderId: firstNonEmpty(order.OrderPrimaryId),
-  orderStatus: firstNonEmpty(order.OrderStaus, order.Status, order.Staus),
-  paidAmount: toNumber(order.PaidAmount),
-  paymentId: firstNonEmpty(order.PaymentId),
-  pinCode: firstNonEmpty(order.Pincode),
-  shippingFee: toNumber(order.ShipingFee),
-  state: firstNonEmpty(order.State),
-  totalDiscount: toNumber(order.PriceDiscounts),
-  totalMrp: toNumber(order.IemTotalMrp, toNumber(order.ItemTotalMrp)),
-  totalSaving: toNumber(order.TotalSaving),
-  vendorId: firstNonEmpty(order.VendorId),
-});
+export const normalizeOrder = (order = {}) => {
+  const items = asArray(order.Items || order.items || order.OrderItems || order.orderItems);
+  const totalQty = getTotalOrderedQty(order);
+  const explicitProductCount = toNumber(
+    firstNonEmpty(order.NumberOfProduct, order.TotalNumberOfProduct, order.numberOfProducts),
+    0
+  );
+
+  return {
+    address: firstNonEmpty(order.Address, order.DeliveryAddress, order.address),
+    addressType: firstNonEmpty(order.AddressType, order.addressType),
+    city: firstNonEmpty(order.City, order.city),
+    createdAt: firstNonEmpty(order.PaymentDate, order.OrderDate, order.CreatedDate, order.createdAt),
+    district: firstNonEmpty(order.District, order.district),
+    invoiceStatus: firstNonEmpty(order.InvoiceStatus, order.invoiceStatus),
+    items,
+    mobileNumber: firstNonEmpty(order.MobileNumber, order.DeliveryMobileNumber, order.mobileNumber),
+    name: firstNonEmpty(order.Name, order.CustomerName, order.name),
+    numberOfProducts: explicitProductCount || totalQty || 0,
+    orderId: firstNonEmpty(order.OrderPrimaryId, order.orderId),
+    orderStatus: firstNonEmpty(order.OrderStaus, order.OrderStatus, order.Status, order.Staus, order.orderStatus),
+    paidAmount: toNumber(order.PaidAmount, toNumber(order.paidAmount)),
+    paymentId: firstNonEmpty(order.PaymentId, order.paymentId),
+    pinCode: firstNonEmpty(order.Pincode, order.pinCode),
+    raw: order,
+    shippingFee: toNumber(order.ShipingFee, toNumber(order.shippingFee)),
+    state: firstNonEmpty(order.State, order.state),
+    totalDiscount: toNumber(order.PriceDiscounts, toNumber(order.totalDiscount)),
+    totalMrp: toNumber(order.IemTotalMrp, toNumber(order.ItemTotalMrp), toNumber(order.totalMrp)),
+    totalQty,
+    totalSaving: toNumber(order.TotalSaving, toNumber(order.totalSaving)),
+    vendorId: firstNonEmpty(order.VendorId, order.vendorId),
+  };
+};
 
 export const normalizeProduct = (product = {}) => {
   const mrp = toNumber(product.MRP ?? product.mrp);
@@ -589,8 +615,8 @@ export const buildAccountPayload = (userId, values) => ({
 
 export const saveAccountDetails = async (serverUrl, userId, values) => {
   const base = safeString(serverUrl) || getApiBase() || DEFAULT_ACCOUNT_API_BASE;
-  const data = await requestWithBase(base, "AccountSave", {
-    body: buildAccountPayload(userId, values),
+  const data = await requestWithBase(base, "ProfileUpdateUser", {
+    body: buildProfilePayload(userId, values),
     method: "POST",
   });
 
@@ -620,6 +646,26 @@ export const deleteAddress = async (addressId) => {
   const data = await request("AddressDelete", {
     body: {
       AddressId: safeString(addressId),
+    },
+    method: "POST",
+  });
+
+  return data;
+};
+
+export const createOrder = async (orderData) => {
+  const data = await request("OrderExtInsertNew", {
+    body: orderData,
+    method: "POST",
+  });
+
+  return data;
+};
+
+export const cancelOrder = async (orderId) => {
+  const data = await request("OrderCancel", {
+    body: {
+      OrderId: safeString(orderId),
     },
     method: "POST",
   });
@@ -685,14 +731,85 @@ export const addWalletAmount = async (userId, values) => {
   return data;
 };
 
-export const fetchOrders = async (userId) => {
-  const data = await request("OrderDataUsingUserIdExtNew", {
-    params: {
-      userId: safeString(userId),
-    },
+export const mergeOrderHistoryEntries = (serverOrders = [], localOrders = []) => {
+  const merged = [...asArray(serverOrders).map(normalizeOrder), ...asArray(localOrders).map(normalizeOrder)];
+
+  const byKey = new Map();
+
+  merged.forEach((order) => {
+    const key = safeString(order.orderId || order.paymentId || order.createdAt || `${order.paidAmount}-${order.numberOfProducts}`);
+
+    if (!key) {
+      return;
+    }
+
+    const current = byKey.get(key);
+
+    if (!current) {
+      byKey.set(key, order);
+      return;
+    }
+
+    const currentStatus = safeString(current.orderStatus).toLowerCase();
+    const incomingStatus = safeString(order.orderStatus).toLowerCase();
+    const isCancelled = incomingStatus === "cancelled" || incomingStatus === "canceled";
+    const wasCancelled = currentStatus === "cancelled" || currentStatus === "canceled";
+
+    byKey.set(key, {
+      ...current,
+      ...order,
+      orderStatus: isCancelled ? order.orderStatus : wasCancelled ? current.orderStatus : order.orderStatus,
+    });
   });
 
-  return asArray(data).map(normalizeOrder);
+  return Array.from(byKey.values()).sort((left, right) => {
+    const leftTime = new Date(left.createdAt || 0).getTime();
+    const rightTime = new Date(right.createdAt || 0).getTime();
+    return rightTime - leftTime;
+  });
+};
+
+export const getStoredOrderHistory = () => asArray(readStorage(STORAGE_KEYS.orderHistory)).map(normalizeOrder);
+
+export const saveOrderToHistory = (order = {}) => {
+  const normalized = normalizeOrder(order);
+  const existing = getStoredOrderHistory();
+  const next = mergeOrderHistoryEntries(existing, [normalized]);
+
+  writeStorage(STORAGE_KEYS.orderHistory, next);
+  return next;
+};
+
+export const updateStoredOrderStatus = (orderId, status) => {
+  const existing = getStoredOrderHistory();
+  const next = existing.map((entry) =>
+    safeString(entry.orderId) === safeString(orderId)
+      ? { ...entry, orderStatus: safeString(status) || entry.orderStatus }
+      : entry
+  );
+
+  writeStorage(STORAGE_KEYS.orderHistory, next);
+  return next;
+};
+
+export const fetchOrders = async (userId) => {
+  try {
+    const data = await request("OrderDataUsingUserIdExtNew", {
+      params: {
+        userId: safeString(userId),
+      },
+    });
+
+    return mergeOrderHistoryEntries(asArray(data).map(normalizeOrder), getStoredOrderHistory());
+  } catch (error) {
+    const fallback = getStoredOrderHistory();
+
+    if (fallback.length) {
+      return fallback;
+    }
+
+    throw error;
+  }
 };
 
 export const fetchProducts = async (vendorId) => {

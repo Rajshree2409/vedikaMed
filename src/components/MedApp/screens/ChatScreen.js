@@ -72,12 +72,59 @@ import {
   getDoctorMonthCells,
 } from "./shared.js";
 
-export const ChatScreen = () => (
-  <div style={style.screen}>
-    <div style={{ ...layout.narrowContent, padding: "20px 0", textAlign: "center", marginTop: 80, color: theme.grayText, fontSize: 14 }}>
-      <div style={{ fontSize: 28, marginBottom: 16, fontWeight: 700, color: theme.navy }}>No Messages</div>
-      No messages yet
+export const ChatScreen = ({ setCurrentPage, appState }) => {
+  const { session } = appState || {};
+  const supportPhone = "9110099122";
+  const customerLabel = session?.userId ? ` Customer ID: ${session.userId}.` : "";
+  const chatMessage = encodeURIComponent(`Hello Vedika support, I need help with my account.${customerLabel}`);
+
+  const openWhatsApp = () => {
+    if (typeof window !== "undefined") {
+      window.open(`https://wa.me/91${supportPhone}?text=${chatMessage}`, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const callSupport = () => {
+    if (typeof window !== "undefined") {
+      window.location.href = `tel:+91${supportPhone}`;
+    }
+  };
+
+  return (
+    <div style={style.screen}>
+      <PageHeader title="Chat Support" onBack={() => setCurrentPage("home")} />
+      <div style={{ ...layout.narrowContent, padding: "20px 0 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ ...surfaceCardStyle, padding: "22px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, marginBottom: 8, fontWeight: 800, color: theme.navy }}>Need help?</div>
+          <div style={{ ...mutedTextStyle, marginBottom: 18 }}>Start a WhatsApp chat or call support directly.</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(160px, 100%), 1fr))", gap: 12 }}>
+            <button
+              type="button"
+              onClick={openWhatsApp}
+              style={{ ...primaryButtonStyle, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
+            >
+              <Icon name="chat" size={18} color={theme.white} />
+              WhatsApp Chat
+            </button>
+            <button
+              type="button"
+              onClick={callSupport}
+              style={{
+                ...primaryButtonStyle,
+                background: theme.blue,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+              }}
+            >
+              <Icon name="phone" size={18} color={theme.white} />
+              Call Support
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 

@@ -134,8 +134,8 @@ export const ProfileScreen = ({ setCurrentPage, appState }) => {
     { color: theme.blue, icon: "location", label: "My Address", page: "add_address" },
     { color: theme.blue, icon: "orders", label: "My Orders", page: "orders" },
     { color: theme.blue, icon: "chat", label: "Chat with us", page: "chat" },
-    { color: theme.blue, icon: "phone", label: "Talk to our Support", page: "contact" },
-    { color: theme.blue, icon: "mail", label: "Feedback / Complain", page: "contact" },
+    { color: theme.blue, icon: "phone", label: "Talk to our Support", page: "support" },
+    { color: theme.blue, icon: "mail", label: "Feedback / Complain", page: "feedback" },
     { color: theme.red, icon: "logout", label: "Log Out", page: "logout" },
   ];
 
